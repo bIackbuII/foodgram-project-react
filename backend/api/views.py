@@ -28,6 +28,7 @@ from .serializers import RecipeListSerializer
 from .serializers import RecipeSerializer
 from .serializers import ShoppingCartSerializer
 from .serializers import TagSerializer
+from .utils import response_pdf
 
 
 class TagsViewSet(ReadOnlyModelViewSet):
@@ -47,9 +48,9 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
     Добавить ингредиент может администратор.
     """
     queryset = Ingredient.objects.all()
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
     serializer_class = IngredientSerializer
-    filter_backends = [IngredientSearchFilter]
+    filter_backends = (IngredientSearchFilter,)
     search_fields = ('^name',)
     pagination_class = None
 
@@ -60,8 +61,8 @@ class RecipeViewSet(ModelViewSet):
     Для анонимов разрешен только просмотр рецептов.
     """
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthorOrReadOnly]
-    filter_backends = [DjangoFilterBackend]
+    permission_classes = (IsAuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     pagination_class = CustomPageNumberPagination
 
@@ -87,7 +88,7 @@ class RecipeViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["POST"],
-            permission_classes=[IsAuthenticated])
+            permission_classes=(IsAuthenticated,))
     def favorite(self, request, pk):
         return self.post_method_for_actions(
             request=request, pk=pk, serializers=FavoriteSerializer)
@@ -98,7 +99,7 @@ class RecipeViewSet(ModelViewSet):
             request=request, pk=pk, model=Favorite)
 
     @action(detail=True, methods=["POST"],
-            permission_classes=[IsAuthenticated])
+            permission_classes=(IsAuthenticated,))
     def shopping_cart(self, request, pk):
         return self.post_method_for_actions(
             request=request, pk=pk, serializers=ShoppingCartSerializer)
@@ -108,8 +109,8 @@ class RecipeViewSet(ModelViewSet):
         return self.delete_method_for_actions(
             request=request, pk=pk, model=ShoppingCart)
 
-    @action(detail=False, methods=['get'],
-            permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['GET'],
+            permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
         final_list = {}
         ingredients = IngredientAmount.objects.filter(
@@ -126,21 +127,4 @@ class RecipeViewSet(ModelViewSet):
                 }
             else:
                 final_list[name]['amount'] += item[2]
-
-        pdfmetrics.registerFont(
-            TTFont('Handicraft', 'data/Handicraft.ttf', 'UTF-8'))
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = ('attachment; '
-                                           'filename="shopping_list.pdf"')
-        page = canvas.Canvas(response)
-        page.setFont('Handicraft', size=24)
-        page.drawString(200, 800, 'Список покупок')
-        page.setFont('Handicraft', size=16)
-        height = 750
-        for i, (name, data) in enumerate(final_list.items(), 1):
-            page.drawString(75, height, (f'{i}. {name} - {data["amount"]} '
-                                         f'{data["measurement_unit"]}'))
-            height -= 25
-        page.showPage()
-        page.save()
-        return response
+        return response_pdf(data=final_list)

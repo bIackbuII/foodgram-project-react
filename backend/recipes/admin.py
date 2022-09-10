@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from backend.settings import EMPTY_VALUE_DISPLAY
+
 from .models import Favorite
 from .models import Ingredient
 from .models import IngredientAmount
@@ -11,7 +13,7 @@ from .models import Tag
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug')
-    empty_value_display = '-'
+    empty_value_display = EMPTY_VALUE_DISPLAY
 
 
 @admin.register(Ingredient)
@@ -19,7 +21,7 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'measurement_unit')
     list_filter = ('name',)
     search_fields = ('name',)
-    empty_value_display = '-'
+    empty_value_display = EMPTY_VALUE_DISPLAY
 
 
 @admin.register(Recipe)
@@ -28,7 +30,7 @@ class RecipeAdmin(admin.ModelAdmin):
                     'amount_tags', 'amount_ingredients')
     list_filter = ('author', 'name', 'tags')
     search_fields = ('name',)
-    empty_value_display = '-'
+    empty_value_display = EMPTY_VALUE_DISPLAY
 
     @staticmethod
     def amount_favorites(obj):
@@ -46,16 +48,16 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(IngredientAmount)
 class IngredientAmountAdmin(admin.ModelAdmin):
     list_display = ('id', 'ingredient', 'recipe', 'amount')
-    empty_value_display = '-'
+    empty_value_display = EMPTY_VALUE_DISPLAY
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe')
-    empty_value_display = '-'
+    empty_value_display = EMPTY_VALUE_DISPLAY
 
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe')
-    empty_value_display = '-'
+    empty_value_display = EMPTY_VALUE_DISPLAY
